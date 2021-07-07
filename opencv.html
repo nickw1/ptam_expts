@@ -1,5 +1,8 @@
 <!DOCTYPE html>
 <!-- Experimenting with opencv.js. No custom C++/WASM code. -->
+<!-- Based on example at
+https://docs.opencv.org/3.4/dd/d00/tutorial_js_video_display.html
+-->
 <html>
 <head>
 <title>opencv test</title>
@@ -35,7 +38,7 @@ async function openCvLoad() {
     // cv is a promise which resolves when it's loaded, by the looks of things. This is not clear from the docs !!!
     cv.then( resolvedCv => { 
         realCv = resolvedCv;
-        console.log("opencv is actually ready now...');
+        console.log('opencv is actually ready now...');
         video1 = document.getElementById('video1');
         const canvas1 = document.getElementById('canvas1');
         ctx = canvas1.getContext('2d');
