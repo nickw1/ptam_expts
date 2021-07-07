@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<!-- Experimenting with sending the video stream to C++. Will be used as a
+     starting point for playing around with PTAM. 
+     C++ is in ocvcpp directory. -->
+<html>
+<head>
+<title>opencv test</title>
+</head>
+
+<body>
+<video id='video1' width='400' height='300'></video>
+<canvas id='canvas1' width='400' height='300'></canvas>
+<script type='text/javascript' src='ocvcpp/opencv.js'></script>
+<script>
+
+const canvas1 = document.getElementById('canvas1');
+const ctx = canvas1.getContext('2d');
+const video1 = document.getElementById('video1');
+const width = 400, height = 300;
+let sentData = false;
+const firstBegin = Date.now();
+const FPS = 30;
+
+navigator.mediaDevices.getUserMedia({video: true}).then (stream => {
+    video1.srcObject = stream;
+    video1.play();
+    setTimeout(processVideo, 500);    
+});
+
+function processVideo() {
+    const begin = Date.now();
+    ctx.drawImage(video1, 0, 0, width, height);
+    if(!sentData && (begin-firstBegin > 1000)) {
+        console.log('Now sending data...');
+        sendCanvas(document.getElementById('canvas1'));
+        sentData = true;
+    }
+    const delay = 1000/FPS - (Date.now() - begin);
+    setTimeout(processVideo, delay);
+}
+
+function sendCanvas(canvas) {
+    const ctx = canvas.getContext('2d');
+    const imgData = ctx.getImageData(0, 0, width, height);
+    const uint8ArrData = new Uint8Array(imgData.data);
+    console.log('Passing to WASM:');
+    console.log(uint8ArrData);
+    console.log(uint8ArrData.length);
+    console.log(uint8ArrData[0]);
+    console.log(uint8ArrData[1]);
+    passToWasm(uint8ArrData, width, height);
+}
+
+function passToWasm(data, width, height) {
+    const ptr = Module._malloc(data.length * data.BYTES_PER_ELEMENT);
+    Module.HEAPU8.set(data, ptr);
+//    const dataOnHeap = new Uint8Array(Module.HEAPU8.buffer, ptr, data.length * data.BYTES_PER_ELEMENT);
+ //   dataOnHeap.set(data);
+//    console.log(`Data in pointer: ${dataOnHeap[0]} ${dataOnHeap[1]} byteoffset ${dataOnHeap.byteOffset}`);
+    try {
+        Module._receiveData(ptr, width, height);
+    } catch(e) { 
+       console.log(e); 
+    }
+    Module._free(ptr);
+    console.log('memory freed');
+}
+</script>
+</body>
+</html>

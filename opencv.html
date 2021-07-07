@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<!-- Experimenting with opencv.js. No custom C++/WASM code. -->
+<html>
+<head>
+<title>opencv test</title>
+</head>
+
+<body>
+<video id='video1' width='400' height='300'></video>
+<canvas id='canvas1' width='400' height='300' style='display: none'></canvas>
+<canvas id='canvas2' width='400' height='300'></canvas>
+<script type='text/javascript' src='opencv/opencv.js'></script>
+<script>
+/*
+Docs suggest using the following:
+
+<script async src='opencv/opencv.js' onload='onOpenCvReady()'>
+
+However this does not work as expected, 'cv' is then an unresolved promise.
+Looks like the new way of handling OpenCV loading is to await the resolution
+of the 'cv' promise, and then carry on.
+
+'realCv' is the intended 'cv' object that the promise resolves with.
+*/
+
+let realCv, ctx, src, dst, video1;
+const width = 400, height = 300;
+const FPS = 30;
+openCvLoad();
+let sentData = false;
+const firstBegin = Date.now();
+
+async function openCvLoad() {
+    console.log('onOpenCvReady()');
+    // cv is a promise which resolves when it's loaded, by the looks of things. This is not clear from the docs !!!
+    cv.then( resolvedCv => { 
+        realCv = resolvedCv;
+        console.log("opencv is actually ready now...');
+        video1 = document.getElementById('video1');
+        const canvas1 = document.getElementById('canvas1');
+        ctx = canvas1.getContext('2d');
+        src = new realCv.Mat(height, width, realCv.CV_8UC4);
+        dst = new realCv.Mat(height, width, realCv.CV_8UC1);
+        navigator.mediaDevices.getUserMedia({video: true}).then (stream => {
+            video1.srcObject = stream;
+            video1.play();
+            setTimeout(processVideo, 500);    
+        });
+
+    });
+}
+
+function processVideo() {
+    const begin = Date.now();
+    ctx.drawImage(video1, 0, 0, width, height);
+    src.data.set(ctx.getImageData(0,0,width,height).data); 
+    realCv.cvtColor(src, dst, realCv.COLOR_RGBA2GRAY);
+    realCv.imshow("canvas2", dst);
+    const delay = 1000/FPS - (Date.now() - begin);
+    setTimeout(processVideo, delay);
+}
+</script>
+</body>
+</html>
