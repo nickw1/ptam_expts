@@ -14,8 +14,8 @@ using namespace std;
 using namespace ptam;
 
 extern "C" {
-    EMSCRIPTEN_KEEPALIVE void receiveData(uint8_t *ptr, int width, int height);
-    EMSCRIPTEN_KEEPALIVE void cleanup();
+     EMSCRIPTEN_KEEPALIVE void receiveData(uint8_t *ptr, int width, int height);
+     EMSCRIPTEN_KEEPALIVE void cleanup();
 }
 
 Tracker *mpTracker;
@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-extern "C" EMSCRIPTEN_KEEPALIVE void receiveData(uint8_t *ptr, int width, int height) {
+extern "C"  EMSCRIPTEN_KEEPALIVE void receiveData(uint8_t *ptr, int width, int height) {
     cout << "receiveData()" << endl;
     auto cv_image = cv::Mat(width, height, CV_8UC4, ptr);
     cv::Mat gray_image;
@@ -58,7 +58,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void receiveData(uint8_t *ptr, int width, int he
     mpTracker->TrackFrame(frameBW, true);
 }
 
-extern "C" EMSCRIPTEN_KEEPALIVE void cleanup() {
+extern "C"  EMSCRIPTEN_KEEPALIVE void cleanup() {
     delete mpTracker;
     delete mpMapMaker;
     delete mpMap;
