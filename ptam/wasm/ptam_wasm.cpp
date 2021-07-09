@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
     mpCamera = new ATANCamera("camera");
     mpMap = new Map;
     mpMapMaker = new MapMaker(*mpMap, *mpCamera);
-    mpTracker = new Tracker(CVD::ImageRef(800,600), *mpCamera, *mpMap, *mpMapMaker);
+    mpTracker = new Tracker(CVD::ImageRef(400,300), *mpCamera, *mpMap, *mpMapMaker);
     return 0;
 }
 
