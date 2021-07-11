@@ -5,6 +5,7 @@ const width = 400, height = 300;
 const FPS = 30;
 let wasmPassTime, wasmPassLast = 0;
 let doSend = false;
+let ptr;
 
 navigator.mediaDevices.getUserMedia({video: true}).then (stream => {
     video1.srcObject = stream;
@@ -22,6 +23,8 @@ navigator.mediaDevices.getUserMedia({video: true}).then (stream => {
     });
     document.getElementById("cleanup").addEventListener("click", e=> {
         Module._cleanup();
+        Module._free(ptr);
+        console.log('memory freed');
     });
 });
 
@@ -46,14 +49,13 @@ function sendCanvas(canvas) {
 
 function passToWasm(data, width, height) {
     console.log('passToWasm()');
-	console.log(data.length);
-    const ptr = Module._malloc(data.length * data.BYTES_PER_ELEMENT);
+    if(!ptr) {    
+        ptr = Module._malloc(data.length * data.BYTES_PER_ELEMENT);
+    }
     Module.HEAPU8.set(data, ptr);
     try {
 //        Module._receiveData(ptr, width, height);
     } catch(e) { 
        console.log(e); 
     }
-    Module._free(ptr);
-    console.log('memory freed');
 }
