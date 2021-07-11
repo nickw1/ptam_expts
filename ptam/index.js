@@ -46,10 +46,11 @@ function sendCanvas(canvas) {
 
 function passToWasm(data, width, height) {
     console.log('passToWasm()');
+	console.log(data.length);
     const ptr = Module._malloc(data.length * data.BYTES_PER_ELEMENT);
     Module.HEAPU8.set(data, ptr);
     try {
-        Module._receiveData(ptr, width, height);
+//        Module._receiveData(ptr, width, height);
     } catch(e) { 
        console.log(e); 
     }

@@ -9,13 +9,6 @@ set( CMAKE_CXX_STANDARD 14 )
 
 set( opencvdir "/home/nick/src/opencv" )
 set( ptamdir "/home/nick/src/ptam_plus" )
-# Set Release as default build type - not now, we want debug mode
-#if(NOT CMAKE_BUILD_TYPE)
-#    set(CMAKE_BUILD_TYPE Release)
-#endif(NOT CMAKE_BUILD_TYPE)
-
-# Does not work
-# find_package( OpenCV REQUIRED PATHS third-party/opencv-4.1.0/build_wasm NO_DEFAULT_PATH)
 
 # Needed for opencv2/opencv.hpp
 include_directories( "${opencvdir}/include" )
@@ -28,9 +21,9 @@ file( GLOB opencv_include_modules "${opencvdir}/modules/*/include" )
 include_directories( ${opencv_include_modules} ${ptamdir} "${ptamdir}/external" "${ptamdir}/external/libcvd" "${ptamdir}/external/gvars-3.0" )
 
 add_compile_options("-fexceptions")
-# not needd if EMSCRIPTEN_KEEPALIVE is included
+add_compile_options("--bind")
+# not needed if EMSCRIPTEN_KEEPALIVE is included
 #add_definitions("-s EXPORTED_FUNCTIONS='[\"_receiveData\",\"_test1\"]'")
-add_definitions("-s NO_DISABLE_EXCEPTION_CATCHING")
 # Our hello world executable
 add_executable( ptam_wasm ptam_wasm.cpp )
 
@@ -38,6 +31,4 @@ add_executable( ptam_wasm ptam_wasm.cpp )
 file( GLOB opencv_js "${opencvdir}/build_wasm/lib/*.a" )
 set( ptam_lib "${ptamdir}/ptam/libPTAM.a" )
 file( GLOB_RECURSE ptam_libs_external "${ptamdir}/external/*.a" )
-#file( GLOB ptam_libs_opencv "${ptamdir}/opencv-3*/build-opencv/3rdparty/lib/*.a")
- 
-target_link_libraries( ptam_wasm ${ptam_libs_external} ${ptam_lib} ${opencv_js} )
+target_link_libraries( ptam_wasm ${ptam_libs_external} ${ptam_lib} )
