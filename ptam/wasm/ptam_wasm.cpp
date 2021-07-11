@@ -53,8 +53,8 @@ double *getPoseMatrix() {
 }
 
 EMSCRIPTEN_BINDINGS(return_data) {
-    emscripten::function("getMapPoints", &getMapPoints);
-    emscripten::function("getPoseMatrix", &getPoseMatrix, allow_raw_pointers());
+    function("getMapPoints", &getMapPoints);
+    function("getPoseMatrix", &getPoseMatrix, allow_raw_pointers());
 }
 
 int main(int argc, char *argv[]) {
@@ -127,10 +127,6 @@ extern "C" void receiveData(uint8_t *ptr, int width, int height) {
             mapPoints.push_back(points[i]->v3WorldPos[j]);
         }
     }
-
-    // What we want to do is return to the JavaScript - the current pose and
-    // the std::vector of MapPoints.
-    // If we can obtain array (pointer) or std::std::vector of either we are ok.
 }
 
 extern "C"   void cleanup() {
