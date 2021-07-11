@@ -1,5 +1,11 @@
 // Based on slam_system.cc from apps in the original ptam-plus repository
 // https://github.com/williammc/ptam_plus
+//
+// Rough-and-ready proof of concept of binding added, but...
+// 
+// Note this currently will NOT build due to 'cannot pop from empty stack'
+// linker error (see README). Consequenrly it's untested.
+
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <emscripten.h>
@@ -59,10 +65,8 @@ int main(int argc, char *argv[]) {
     
     mpTracker = new ptam::Tracker(CVD::ImageRef(400,300), *mpCamera, *mpMap, *mpMapMaker);
 
-
     matrix[15] = 1;
     matrix[12] = matrix[13] = matrix[14] = 0;
-
 
     return 0;
 }
