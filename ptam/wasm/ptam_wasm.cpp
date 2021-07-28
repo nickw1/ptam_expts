@@ -21,7 +21,7 @@
 #include <vector>
 
 
-using namespace emscripten;
+//using namespace emscripten;
 
 double matrix[16];
 std::vector<double> mapPoints;
@@ -41,7 +41,7 @@ ptam::ATANCamera *mpCamera;
 
 
 EMSCRIPTEN_BINDINGS(my_class_example) {
-    register_vector<double>("VectorDouble");
+    emscripten::register_vector<double>("VectorDouble");
 }
 
 std::vector<double> getMapPoints() {
@@ -53,12 +53,13 @@ double *getPoseMatrix() {
 }
 
 EMSCRIPTEN_BINDINGS(return_data) {
-    function("getMapPoints", &getMapPoints);
-    function("getPoseMatrix", &getPoseMatrix, allow_raw_pointers());
+    emscripten::function("getMapPoints", &getMapPoints);
+    emscripten::function("getPoseMatrix", &getPoseMatrix, emscripten::allow_raw_pointers());
 }
 
 int main(int argc, char *argv[]) {
     std::cout << "initialising ptam system..." << std::endl;
+	
     mpCamera = new ptam::ATANCamera("camera");
     mpMap = new ptam::Map;
     mpMapMaker = new ptam::MapMaker (*mpMap, *mpCamera);
@@ -67,6 +68,7 @@ int main(int argc, char *argv[]) {
 
     matrix[15] = 1;
     matrix[12] = matrix[13] = matrix[14] = 0;
+	
 
     return 0;
 }
@@ -95,12 +97,15 @@ extern "C" void receiveData(uint8_t *ptr, int width, int height) {
     frameBW.copy_from(cvd_gray_frame);
     frameRGB.copy_from(cvd_rgb_frame);
 
-
     mpTracker->TrackFrame(frameBW, true);
     //    https://www.edwardrosten.com/cvd/toon/html-user/classTooN_1_1SE3.html
     // We can't get the raw matrix straight out of the SE3 so we have to
     // decompose it into translation and rotation components and then 
     // reconstruct the matrix.
+
+
+
+
     TooN::SE3<double> pose = mpTracker->GetCurrentPose();
     const TooN::Matrix<3,3,double> rotation = pose.get_rotation().get_matrix();
     for(int row=0; row<3; row++) {
