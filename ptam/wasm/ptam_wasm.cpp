@@ -22,16 +22,19 @@
 
 
 //using namespace emscripten;
+using std::cout;
+using std::endl;
+using std::vector;
 
 double matrix[16];
-std::vector<double> mapPoints;
+vector<double> mapPoints;
         
 extern "C" {
       void receiveData(uint8_t *ptr, int width, int height);
       void cleanup();
 }
 
-std::vector<double> getMapPoints();
+vector<double> getMapPoints();
 double *getPoseMatrix();
 
 ptam::Tracker *mpTracker;
@@ -40,11 +43,7 @@ ptam::MapMaker *mpMapMaker;
 ptam::ATANCamera *mpCamera;
 
 
-EMSCRIPTEN_BINDINGS(my_class_example) {
-    emscripten::register_vector<double>("VectorDouble");
-}
-
-std::vector<double> getMapPoints() {
+vector<double> getMapPoints() {
     return mapPoints;
 }
 
@@ -55,11 +54,12 @@ double *getPoseMatrix() {
 EMSCRIPTEN_BINDINGS(return_data) {
     emscripten::function("getMapPoints", &getMapPoints);
     emscripten::function("getPoseMatrix", &getPoseMatrix, emscripten::allow_raw_pointers());
+    emscripten::register_vector<double>("vector<double>");
 }
 
 int main(int argc, char *argv[]) {
-    std::cout << "initialising ptam system..." << std::endl;
-	
+    cout << "initialising ptam system..." << endl;
+    
     mpCamera = new ptam::ATANCamera("camera");
     mpMap = new ptam::Map;
     mpMapMaker = new ptam::MapMaker (*mpMap, *mpCamera);
@@ -68,13 +68,13 @@ int main(int argc, char *argv[]) {
 
     matrix[15] = 1;
     matrix[12] = matrix[13] = matrix[14] = 0;
-	
+    
 
     return 0;
 }
 
 extern "C" void receiveData(uint8_t *ptr, int width, int height) {
-    std::cout << "receiveData()" << std::endl;
+    cout << "receiveData()" << endl;
     auto cv_image = cv::Mat(width, height, CV_8UC4, ptr);
     
     cv::Mat gray_image;
@@ -119,18 +119,27 @@ extern "C" void receiveData(uint8_t *ptr, int width, int height) {
         matrix[i*4+3] = translation[i];
     }
 
+    cout << "Matrix: ";
+    for(int i=0; i<16; i++) {
+        cout << matrix[i];
+    }
+    cout << endl;
 
 
-    // the Map has a std::vector of pointers to MapPoint.
+
+    // the Map has a vector of pointers to MapPoint.
     // MapPoint contains a TooN::Vector v3WorldPos.
     mapPoints.clear();
-    std::vector<ptam::MapPoint*> points = mpMap->points;
+    vector<ptam::MapPoint*> points = mpMap->points;
     mapPoints.reserve(points.size() * sizeof(double) * 3);
     
     for(int i=0; i<points.size(); i++) {
+        cout << " worldpos for point " << i << " : ";
         for(int j=0; j<3; j++) {
             mapPoints.push_back(points[i]->v3WorldPos[j]);
+            cout << points[i]->v3WorldPos[j]  << " ";
         }
+        cout << endl;
     }
 }
 
