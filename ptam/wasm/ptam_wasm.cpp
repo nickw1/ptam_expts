@@ -26,16 +26,35 @@ using std::cout;
 using std::endl;
 using std::vector;
 
-double matrix[16];
+double poseMatrix[16];
+
+class PoseMatrix {
+    public:
+        double *matrix;
+
+        emscripten::val get(int index) {
+            if(matrix == NULL) {
+                return emscripten::val::undefined();
+            } else if(index >= 0 && index < 16) {
+                return emscripten::val(matrix[index]);
+            } else {
+                return emscripten::val::undefined();
+            }
+        }
+
+        void loadLatestMatrix() {
+            matrix = poseMatrix;
+        }
+}; 
+
 vector<double> mapPoints;
         
 extern "C" {
-      void receiveData(uint8_t *ptr, int width, int height);
-      void cleanup();
+      EMSCRIPTEN_KEEPALIVE void receiveData(uint8_t *ptr, int width, int height);
+      EMSCRIPTEN_KEEPALIVE void cleanup();
 }
 
 vector<double> getMapPoints();
-double *getPoseMatrix();
 
 ptam::Tracker *mpTracker;
 ptam::Map *mpMap;
@@ -47,33 +66,38 @@ vector<double> getMapPoints() {
     return mapPoints;
 }
 
-double *getPoseMatrix() {
-    return matrix;
-}
-
-EMSCRIPTEN_BINDINGS(return_data) {
+EMSCRIPTEN_BINDINGS(map_points) {
     emscripten::function("getMapPoints", &getMapPoints);
-    emscripten::function("getPoseMatrix", &getPoseMatrix, emscripten::allow_raw_pointers());
     emscripten::register_vector<double>("vector<double>");
 }
+
+EMSCRIPTEN_BINDINGS(pose_matrix) {
+    emscripten::class_<PoseMatrix>("PoseMatrix")
+        .constructor()
+        .function("loadLatestMatrix", &PoseMatrix::loadLatestMatrix)
+        .function("get", &PoseMatrix::get);
+}
+
 
 int main(int argc, char *argv[]) {
     cout << "initialising ptam system..." << endl;
     
-    mpCamera = new ptam::ATANCamera("camera");
+    mpCamera = new ptam::ATANCamera("Camera");
+    
     mpMap = new ptam::Map;
     mpMapMaker = new ptam::MapMaker (*mpMap, *mpCamera);
     
     mpTracker = new ptam::Tracker(CVD::ImageRef(400,300), *mpCamera, *mpMap, *mpMapMaker);
 
-    matrix[15] = 1;
-    matrix[12] = matrix[13] = matrix[14] = 0;
+    
+    poseMatrix[15] = 1;
+    poseMatrix[12] = poseMatrix[13] = poseMatrix[14] = 0;
     
 
     return 0;
 }
 
-extern "C" void receiveData(uint8_t *ptr, int width, int height) {
+extern "C" EMSCRIPTEN_KEEPALIVE void receiveData(uint8_t *ptr, int width, int height) {
     cout << "receiveData()" << endl;
     auto cv_image = cv::Mat(width, height, CV_8UC4, ptr);
     
@@ -83,7 +107,7 @@ extern "C" void receiveData(uint8_t *ptr, int width, int height) {
     
     // From PTAM code (slam_system.cc)
     // TODO - Not sure if this is needed here
-    //cv::cvtColor(cv_image, cv_image, CV_BGR2RGB);
+    cv::cvtColor(cv_image, cv_image, cv::COLOR_BGR2RGB);
 
     cv::cvtColor(cv_image, gray_image, cv::COLOR_RGB2GRAY);
     
@@ -110,18 +134,21 @@ extern "C" void receiveData(uint8_t *ptr, int width, int height) {
     const TooN::Matrix<3,3,double> rotation = pose.get_rotation().get_matrix();
     for(int row=0; row<3; row++) {
         for(int col=0; col<3; col++) {
-            matrix[row*4+col] = rotation(row, col);
+            poseMatrix[row*4+col] = rotation(row, col);
         }    
     }
 
     TooN::Vector<3, double> translation = pose.get_translation();
     for(int i=0; i<3; i++) {
-        matrix[i*4+3] = translation[i];
+        poseMatrix[i*4+3] = translation[i];
     }
 
     cout << "Matrix: ";
     for(int i=0; i<16; i++) {
-        cout << matrix[i];
+        if(!(i%4)) {
+            cout << endl;
+        }
+        cout << poseMatrix[i] << " ";
     }
     cout << endl;
 
@@ -143,7 +170,7 @@ extern "C" void receiveData(uint8_t *ptr, int width, int height) {
     }
 }
 
-extern "C"   void cleanup() {
+extern "C"   EMSCRIPTEN_KEEPALIVE void cleanup() {
     delete mpTracker;
     delete mpMapMaker;
     delete mpMap;

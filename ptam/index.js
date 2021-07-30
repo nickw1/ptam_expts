@@ -7,6 +7,7 @@ let wasmPassTime, wasmPassLast = 0;
 let active = false;
 let ptr;
 let pollHandle = null;
+let poseMatrix = null; 
 
 navigator.mediaDevices.getUserMedia({video: true}).then (stream => {
     video1.srcObject = stream;
@@ -16,7 +17,7 @@ navigator.mediaDevices.getUserMedia({video: true}).then (stream => {
         active = true;
         document.getElementById("start").setAttribute("disabled", true);
         document.getElementById("stop").removeAttribute("disabled");
-        pollHandle = setInterval(pollPTAM, 1000);
+        pollHandle = setInterval(pollPTAM, 5000);
     });
     document.getElementById("stop").addEventListener("click", e=> {
         active = false;
@@ -36,7 +37,7 @@ function processVideo() {
     const begin = Date.now();
     ctx.drawImage(video1, 0, 0, width, height);
     wasmPassTime = Date.now();
-    if(active && wasmPassTime - wasmPassLast > 2000) {
+    if(active && wasmPassTime - wasmPassLast > 5000) {
         sendCanvas(document.getElementById('canvas1'));
         wasmPassLast = wasmPassTime;
     }
@@ -58,13 +59,22 @@ function passToWasm(data, width, height) {
     }
     Module.HEAPU8.set(data, ptr);
     try {
-//        Module._receiveData(ptr, width, height);
+        Module._receiveData(ptr, width, height);
     } catch(e) { 
        console.log(e); 
     }
 }
 
 function pollPTAM() {
+    if(poseMatrix === null) {
+        poseMatrix = new Module.PoseMatrix();
+    }
     const mapPoints = Module.getMapPoints();
-    const poseMatrix = Module.getPoseMatrix();
+    console.log('JS: mapPoints:')
+    console.log(mapPoints);
+    poseMatrix.loadLatestMatrix();
+    console.log('JS: poseMatrix:')
+    for(let i=0; i<16; i++) {
+        console.log(poseMatrix.get(i));
+    }
 }
