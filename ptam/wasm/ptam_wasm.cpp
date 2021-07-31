@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
     mpMap = new ptam::Map;
     mpMapMaker = new ptam::MapMaker (*mpMap, *mpCamera);
     
-    mpTracker = new ptam::Tracker(CVD::ImageRef(400,300), *mpCamera, *mpMap, *mpMapMaker);
+    mpTracker = new ptam::Tracker(CVD::ImageRef(640,480), *mpCamera, *mpMap, *mpMapMaker);
 
     
     poseMatrix[15] = 1;
@@ -98,6 +98,7 @@ int main(int argc, char *argv[]) {
 }
 
 extern "C" EMSCRIPTEN_KEEPALIVE void receiveData(uint8_t *ptr, int width, int height) {
+
     cout << "receiveData()" << endl;
     auto cv_image = cv::Mat(width, height, CV_8UC4, ptr);
     
@@ -107,7 +108,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void receiveData(uint8_t *ptr, int width, int he
     
     // From PTAM code (slam_system.cc)
     // TODO - Not sure if this is needed here
-    cv::cvtColor(cv_image, cv_image, cv::COLOR_BGR2RGB);
+//    cv::cvtColor(cv_image, cv_image, cv::COLOR_BGR2RGB);
 
     cv::cvtColor(cv_image, gray_image, cv::COLOR_RGB2GRAY);
     
@@ -120,6 +121,8 @@ extern "C" EMSCRIPTEN_KEEPALIVE void receiveData(uint8_t *ptr, int width, int he
 
     frameBW.copy_from(cvd_gray_frame);
     frameRGB.copy_from(cvd_rgb_frame);
+
+    mpTracker->AskInitialTrack(); // has to be done to get the tracking going, this runs in response to a keypress in the GLUT sample app
 
     mpTracker->TrackFrame(frameBW, true);
     //    https://www.edwardrosten.com/cvd/toon/html-user/classTooN_1_1SE3.html
