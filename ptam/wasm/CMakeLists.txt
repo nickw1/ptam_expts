@@ -24,9 +24,8 @@ include_directories( ${opencv_include_modules} ${ptamdir} "${ptamdir}/external" 
 add_compile_options("-fexceptions")
 #add_link_options("-s LLD_REPORT_UNDEFINED")
 add_link_options("-fexceptions")
-# remove these as testing on other laptop - could be risky?
 #add_link_options("-s INITIAL_MEMORY=32000000")
-#add_link_options("-s ALLOW_MEMORY_GROWTH=1")
+add_link_options("-s ALLOW_MEMORY_GROWTH=1")
 # the below is useful to debug pointer errors but doesn't seem to link properly
 # https://emscripten.org/docs/debugging/Sanitizers.html 
 #add_link_options("-fsanitize=address")

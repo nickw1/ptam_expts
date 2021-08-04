@@ -52,6 +52,7 @@ vector<double> mapPoints;
 extern "C" {
       EMSCRIPTEN_KEEPALIVE void receiveData(uint8_t *ptr, int width, int height);
       EMSCRIPTEN_KEEPALIVE void cleanup();
+	  EMSCRIPTEN_KEEPALIVE void captureKeyFrame();
 }
 
 vector<double> getMapPoints();
@@ -122,7 +123,8 @@ extern "C" EMSCRIPTEN_KEEPALIVE void receiveData(uint8_t *ptr, int width, int he
     frameBW.copy_from(cvd_gray_frame);
     frameRGB.copy_from(cvd_rgb_frame);
 
-    mpTracker->AskInitialTrack(); // has to be done to get the tracking going, this runs in response to a keypress in the GLUT sample app
+
+    // This will try to get the tracking going, first stage is to get two keyframes, first keyframe is obtained when we 'press space' (simulated by call above), second is when we 'press space' again
 
     mpTracker->TrackFrame(frameBW, true);
     //    https://www.edwardrosten.com/cvd/toon/html-user/classTooN_1_1SE3.html
@@ -171,6 +173,11 @@ extern "C" EMSCRIPTEN_KEEPALIVE void receiveData(uint8_t *ptr, int width, int he
         }
         cout << endl;
     }
+}
+
+// simulate the 'space press'...
+extern "C" EMSCRIPTEN_KEEPALIVE void captureKeyFrame() {
+	mpTracker->AskInitialTrack();
 }
 
 extern "C"   EMSCRIPTEN_KEEPALIVE void cleanup() {

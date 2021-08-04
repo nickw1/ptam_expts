@@ -4,7 +4,7 @@ const video1 = document.getElementById('video1');
 const width = 640, height = 480;
 const FPS = 30;
 let wasmPassTime, wasmPassLast = 0;
-let active = false;
+let active = false, nKeyFrames = 0; 
 let ptr;
 let pollHandle = null;
 let poseMatrix = null; 
@@ -14,10 +14,23 @@ navigator.mediaDevices.getUserMedia({video: true}).then (stream => {
     video1.play();
     setTimeout(processVideo, 500);    
     document.getElementById("start").addEventListener("click", e=> {
-        active = true;
         document.getElementById("start").setAttribute("disabled", true);
+        if(nKeyFrames === 0) {
+            document.getElementById("captureKeyFrame").removeAttribute("disabled");
+        }
         document.getElementById("stop").removeAttribute("disabled");
+        active = true;
         pollHandle = setInterval(pollPTAM, 5000);
+    });
+    document.getElementById("captureKeyFrame").addEventListener("click", e=> {
+        Module._captureKeyFrame();    
+        if(++nKeyFrames == 1) {
+            alert('Press the button again to capture the next keyframe.');
+            document.getElementById("captureKeyFrame").value = 'Capture key frame 2';
+        } else {
+            alert('Both keyframes captured, tracking...');
+            document.getElementById("captureKeyFrame").setAttribute("disabled", true);
+        }
     });
     document.getElementById("stop").addEventListener("click", e=> {
         active = false;
@@ -29,6 +42,10 @@ navigator.mediaDevices.getUserMedia({video: true}).then (stream => {
     document.getElementById("cleanup").addEventListener("click", e=> {
         Module._cleanup();
         Module._free(ptr);
+        document.getElementById("start").setAttribute("disabled", true);
+        document.getElementById("captureKeyFrame").setAttribute("disabled", true);
+        document.getElementById("stop").setAttribute("disabled", true);
+        document.getElementById("cleanup").setAttribute("disabled", true);
         console.log('memory freed');
     });
 });
@@ -37,7 +54,7 @@ function processVideo() {
     const begin = Date.now();
     ctx.drawImage(video1, 0, 0, width, height);
     wasmPassTime = Date.now();
-    if(active && wasmPassTime - wasmPassLast > 5000) {
+    if(active && wasmPassTime - wasmPassLast > 2000) {
         sendCanvas(document.getElementById('canvas1'));
         wasmPassLast = wasmPassTime;
     }
@@ -73,8 +90,10 @@ function pollPTAM() {
     console.log('JS: mapPoints:')
     console.log(mapPoints);
     poseMatrix.loadLatestMatrix();
+    /*
     console.log('JS: poseMatrix:')
     for(let i=0; i<16; i++) {
         console.log(poseMatrix.get(i));
     }
+    */
 }
