@@ -13,11 +13,14 @@ navigator.mediaDevices.getUserMedia({video: true}).then (stream => {
     video1.srcObject = stream;
     video1.play();
     setTimeout(processVideo, 500);    
+    status("Ready.");
     document.getElementById("start").addEventListener("click", e=> {
         document.getElementById("start").setAttribute("disabled", true);
         if(nKeyFrames === 0) {
             status('Press the button to capture the first key frame.');
             document.getElementById("captureKeyFrame").removeAttribute("disabled");
+        } else {
+            status("Started.");
         }
         document.getElementById("stop").removeAttribute("disabled");
         active = true;
@@ -38,12 +41,14 @@ navigator.mediaDevices.getUserMedia({video: true}).then (stream => {
         active = false;
         document.getElementById("start").removeAttribute("disabled");
         document.getElementById("stop").setAttribute("disabled", true);
+        status("Stopped.");
         clearInterval(pollHandle);
         pollHandle = null;
     });
     document.getElementById("cleanup").addEventListener("click", e=> {
         Module._cleanup();
         Module._free(ptr);
+        status("Memory freed.");
         document.getElementById("start").setAttribute("disabled", true);
         document.getElementById("captureKeyFrame").setAttribute("disabled", true);
         document.getElementById("stop").setAttribute("disabled", true);
