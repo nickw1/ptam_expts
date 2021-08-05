@@ -16,6 +16,7 @@ navigator.mediaDevices.getUserMedia({video: true}).then (stream => {
     document.getElementById("start").addEventListener("click", e=> {
         document.getElementById("start").setAttribute("disabled", true);
         if(nKeyFrames === 0) {
+            status('Press the button to capture the first key frame.');
             document.getElementById("captureKeyFrame").removeAttribute("disabled");
         }
         document.getElementById("stop").removeAttribute("disabled");
@@ -26,10 +27,10 @@ navigator.mediaDevices.getUserMedia({video: true}).then (stream => {
         const ret = Module._captureKeyFrame();    
         console.log(`_captureKeyFrame() returned: ${ret}`);
         if(++nKeyFrames == 1) {
-            alert('Press the button again to capture the next keyframe.');
+            status('Press the button again to capture the next keyframe.');
             document.getElementById("captureKeyFrame").value = 'Capture key frame 2';
         } else {
-            alert('Both keyframes captured, tracking...');
+            status('Both keyframes captured, tracking...');
             document.getElementById("captureKeyFrame").setAttribute("disabled", true);
         }
     });
@@ -82,7 +83,7 @@ function passToWasm(data, width, height) {
             nKeyFrames = 0;
             document.getElementById("captureKeyFrame").removeAttribute("disabled");
             document.getElementById("captureKeyFrame").value = 'Capture key frame 1';
-            alert('Could not track - resetting, please capture first key frame again.');
+            status('Could not track - resetting, please capture first key frame again.');
         }
     } catch(e) { 
        console.log(e); 
@@ -103,4 +104,8 @@ function pollPTAM() {
         console.log(poseMatrix.get(i));
     }
     */
+}
+
+function status(msg) {
+    document.getElementById('status').innerHTML = msg;
 }
