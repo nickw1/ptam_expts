@@ -6,6 +6,10 @@ This is a demo to test PTAM functionality compiled to WASM. It works with the fr
 
 You will need emscripten installed, see [emscripten.org](https://emscripten.org). You can change the emscripten installation directory in `CMakeLists.txt`.
 
+## Which PTAM version?
+
+You will need the specific version of PTAM [here](https://github.com/nickw1/ptam_plus/tree/ptam_emscripten_fix), i.e. the `ptam_emscripten_fix` branch. This was forked from Thorsten Bux's [fork](https://github.com/ThorstenBux/ptam_plus) of [PTAM Plus](https://github.com/williammc/ptam_plus). It's been fixed so it compiles on Emscripten and also has some additional functionality added to work better with a web front end.
+
 ## OpenCV
 
 You also need opencv.js installed. It has been tested on OpenCV direct clones from the [GitHub repository](https://github.com/opencv/opencv) from early July 2021, including OpenCV 4.5.3.
