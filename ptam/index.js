@@ -20,10 +20,11 @@ navigator.mediaDevices.getUserMedia({video: true}).then (stream => {
         }
         document.getElementById("stop").removeAttribute("disabled");
         active = true;
-        pollHandle = setInterval(pollPTAM, 5000);
+        pollHandle = setInterval(pollPTAM, 30000);
     });
     document.getElementById("captureKeyFrame").addEventListener("click", e=> {
-        Module._captureKeyFrame();    
+        const ret = Module._captureKeyFrame();    
+        console.log(`_captureKeyFrame() returned: ${ret}`);
         if(++nKeyFrames == 1) {
             alert('Press the button again to capture the next keyframe.');
             document.getElementById("captureKeyFrame").value = 'Capture key frame 2';
@@ -54,7 +55,7 @@ function processVideo() {
     const begin = Date.now();
     ctx.drawImage(video1, 0, 0, width, height);
     wasmPassTime = Date.now();
-    if(active && wasmPassTime - wasmPassLast > 2000) {
+    if(active && wasmPassTime - wasmPassLast > 1000) {
         sendCanvas(document.getElementById('canvas1'));
         wasmPassLast = wasmPassTime;
     }
@@ -76,7 +77,13 @@ function passToWasm(data, width, height) {
     }
     Module.HEAPU8.set(data, ptr);
     try {
-        Module._receiveData(ptr, width, height);
+        const needReset = Module._receiveData(ptr, width, height);
+        if(needReset) {
+            nKeyFrames = 0;
+            document.getElementById("captureKeyFrame").removeAttribute("disabled");
+            document.getElementById("captureKeyFrame").value = 'Capture key frame 1';
+            alert('Could not track - resetting, please capture first key frame again.');
+        }
     } catch(e) { 
        console.log(e); 
     }

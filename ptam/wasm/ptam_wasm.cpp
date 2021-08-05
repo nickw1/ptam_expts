@@ -50,9 +50,9 @@ class PoseMatrix {
 vector<double> mapPoints;
         
 extern "C" {
-      EMSCRIPTEN_KEEPALIVE void receiveData(uint8_t *ptr, int width, int height);
+      EMSCRIPTEN_KEEPALIVE bool receiveData(uint8_t *ptr, int width, int height);
       EMSCRIPTEN_KEEPALIVE void cleanup();
-	  EMSCRIPTEN_KEEPALIVE void captureKeyFrame();
+      EMSCRIPTEN_KEEPALIVE void captureKeyFrame();
 }
 
 vector<double> getMapPoints();
@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-extern "C" EMSCRIPTEN_KEEPALIVE void receiveData(uint8_t *ptr, int width, int height) {
+extern "C" EMSCRIPTEN_KEEPALIVE bool receiveData(uint8_t *ptr, int width, int height) {
 
     cout << "receiveData()" << endl;
     auto cv_image = cv::Mat(width, height, CV_8UC4, ptr);
@@ -126,7 +126,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void receiveData(uint8_t *ptr, int width, int he
 
     // This will try to get the tracking going, first stage is to get two keyframes, first keyframe is obtained when we 'press space' (simulated by call above), second is when we 'press space' again
 
-    mpTracker->TrackFrame(frameBW, true);
+    ptam::Tracker::ResetStatus resetStatus = mpTracker->TrackFrame(frameBW, true);
     //    https://www.edwardrosten.com/cvd/toon/html-user/classTooN_1_1SE3.html
     // We can't get the raw matrix straight out of the SE3 so we have to
     // decompose it into translation and rotation components and then 
@@ -147,7 +147,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void receiveData(uint8_t *ptr, int width, int he
     for(int i=0; i<3; i++) {
         poseMatrix[i*4+3] = translation[i];
     }
-
+    /*
     cout << "Matrix: ";
     for(int i=0; i<16; i++) {
         if(!(i%4)) {
@@ -156,6 +156,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE void receiveData(uint8_t *ptr, int width, int he
         cout << poseMatrix[i] << " ";
     }
     cout << endl;
+    */
 
 
 
@@ -173,11 +174,13 @@ extern "C" EMSCRIPTEN_KEEPALIVE void receiveData(uint8_t *ptr, int width, int he
         }
         cout << endl;
     }
+    return resetStatus == ptam::Tracker::RESET ? true: false;
 }
 
 // simulate the 'space press'...
 extern "C" EMSCRIPTEN_KEEPALIVE void captureKeyFrame() {
-	mpTracker->AskInitialTrack();
+    cout << "### ptam_wasm.cpp: simulating space press" << endl;
+    mpTracker->AskInitialTrack();
 }
 
 extern "C"   EMSCRIPTEN_KEEPALIVE void cleanup() {
