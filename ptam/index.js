@@ -24,7 +24,7 @@ navigator.mediaDevices.getUserMedia({video: true}).then (stream => {
         }
         document.getElementById("stop").removeAttribute("disabled");
         active = true;
-        pollHandle = setInterval(pollPTAM, 30000);
+        pollHandle = setInterval(pollPTAM, 5000);
     });
     document.getElementById("captureKeyFrame").addEventListener("click", e=> {
         const ret = Module._captureKeyFrame();    
@@ -103,12 +103,18 @@ function pollPTAM() {
     console.log('JS: mapPoints:')
     console.log(mapPoints);
     poseMatrix.loadLatestMatrix();
-    /*
+    
     console.log('JS: poseMatrix:')
+    let str = "";
     for(let i=0; i<16; i++) {
-        console.log(poseMatrix.get(i));
+        if(!(i%4)) {
+            str += "\n";
+        }
+        str += `${poseMatrix.get(i)} `;
+
     }
-    */
+    console.log(str);
+   
 }
 
 function status(msg) {
