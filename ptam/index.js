@@ -9,7 +9,7 @@ let ptr;
 let pollHandle = null;
 let poseMatrix = null; 
 
-navigator.mediaDevices.getUserMedia({video: true}).then (stream => {
+navigator.mediaDevices.getUserMedia({video: {facingMode: 'environment'}}).then (stream => {
     video1.srcObject = stream;
     video1.play();
     setTimeout(processVideo, 500);    
@@ -32,7 +32,6 @@ navigator.mediaDevices.getUserMedia({video: true}).then (stream => {
             status('Press the button again to capture the next keyframe.');
             document.getElementById("captureKeyFrame").value = 'Capture key frame 2';
         } else {
-            status('Both keyframes captured, tracking...');
             document.getElementById("captureKeyFrame").setAttribute("disabled", true);
         }
     });
@@ -81,13 +80,16 @@ function passToWasm(data, width, height) {
     }
     Module.HEAPU8.set(data, ptr);
     try {
-        const needReset = Module._receiveData(ptr, width, height);
-        if(needReset) {
+        const trackStatus = Module._receiveData(ptr, width, height);
+        if(trackStatus == 0) {
             nKeyFrames = 0;
             document.getElementById("captureKeyFrame").removeAttribute("disabled");
             document.getElementById("captureKeyFrame").value = 'Capture key frame 1';
             status('Could not track - resetting, please capture first key frame again.');
             alert('Could not track - resetting, please capture first key frame again.');
+        } else if (trackStatus == 2) {
+            alert('Both keyframes captured, tracking...');
+            status('Both keyframes captured, tracking...');
         }
     } catch(e) { 
        console.log(e); 
@@ -103,7 +105,7 @@ function pollPTAM() {
 //    console.log(mapPoints);
     poseMatrix.loadLatestMatrix();
     
-	/*
+    
     console.log('JS: poseMatrix:')
     let str = "";
     for(let i=0; i<16; i++) {
@@ -114,7 +116,7 @@ function pollPTAM() {
 
     }
     console.log(str);
-	*/
+    
    
 }
 

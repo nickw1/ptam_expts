@@ -50,7 +50,7 @@ class PoseMatrix {
 vector<double> mapPoints;
         
 extern "C" {
-      EMSCRIPTEN_KEEPALIVE bool receiveData(uint8_t *ptr, int width, int height);
+      EMSCRIPTEN_KEEPALIVE int receiveData(uint8_t *ptr, int width, int height);
       EMSCRIPTEN_KEEPALIVE void cleanup();
       EMSCRIPTEN_KEEPALIVE void captureKeyFrame();
 }
@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-extern "C" EMSCRIPTEN_KEEPALIVE bool receiveData(uint8_t *ptr, int width, int height) {
+extern "C" EMSCRIPTEN_KEEPALIVE int receiveData(uint8_t *ptr, int width, int height) {
 
 //    cout << "receiveData()" << endl;
     auto cv_image = cv::Mat(width, height, CV_8UC4, ptr);
@@ -174,7 +174,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE bool receiveData(uint8_t *ptr, int width, int he
         }
         cout << endl;
     }
-    return resetStatus == ptam::Tracker::RESET ? true: false;
+    return resetStatus == ptam::Tracker::RESET ? 0: (resetStatus == ptam::Tracker::BOTH_FRAMES_CAPTURED ? 2: 1);
 }
 
 // simulate the 'space press'...

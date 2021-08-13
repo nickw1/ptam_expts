@@ -29,7 +29,8 @@ add_link_options("SHELL: -s LLD_REPORT_UNDEFINED")
 add_link_options("-fexceptions")
 #add_link_options("-s INITIAL_MEMORY=32000000")
 add_link_options("SHELL: -s PTHREAD_POOL_SIZE=4")
-add_link_options("SHELL: -s ALLOW_MEMORY_GROWTH=1")
+#add_link_options("SHELL: -s ALLOW_MEMORY_GROWTH=1")
+add_link_options("SHELL: -s INITIAL_MEMORY=512mb")
 add_link_options("-pthread")
 # the below is useful to debug pointer errors but doesn't seem to link properly
 # https://emscripten.org/docs/debugging/Sanitizers.html 
