@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
 
 extern "C" EMSCRIPTEN_KEEPALIVE bool receiveData(uint8_t *ptr, int width, int height) {
 
-    cout << "receiveData()" << endl;
+//    cout << "receiveData()" << endl;
     auto cv_image = cv::Mat(width, height, CV_8UC4, ptr);
     
     cv::Mat gray_image;

@@ -28,7 +28,6 @@ navigator.mediaDevices.getUserMedia({video: true}).then (stream => {
     });
     document.getElementById("captureKeyFrame").addEventListener("click", e=> {
         const ret = Module._captureKeyFrame();    
-        console.log(`_captureKeyFrame() returned: ${ret}`);
         if(++nKeyFrames == 1) {
             status('Press the button again to capture the next keyframe.');
             document.getElementById("captureKeyFrame").value = 'Capture key frame 2';
@@ -77,7 +76,6 @@ function sendCanvas(canvas) {
 }
 
 function passToWasm(data, width, height) {
-    console.log('passToWasm()');
     if(!ptr) {    
         ptr = Module._malloc(data.length * data.BYTES_PER_ELEMENT);
     }
@@ -89,6 +87,7 @@ function passToWasm(data, width, height) {
             document.getElementById("captureKeyFrame").removeAttribute("disabled");
             document.getElementById("captureKeyFrame").value = 'Capture key frame 1';
             status('Could not track - resetting, please capture first key frame again.');
+            alert('Could not track - resetting, please capture first key frame again.');
         }
     } catch(e) { 
        console.log(e); 
@@ -100,10 +99,11 @@ function pollPTAM() {
         poseMatrix = new Module.PoseMatrix();
     }
     const mapPoints = Module.getMapPoints();
-    console.log('JS: mapPoints:')
-    console.log(mapPoints);
+    console.log(`JS: mapPoints length ${mapPoints.length}`)
+//    console.log(mapPoints);
     poseMatrix.loadLatestMatrix();
     
+	/*
     console.log('JS: poseMatrix:')
     let str = "";
     for(let i=0; i<16; i++) {
@@ -114,6 +114,7 @@ function pollPTAM() {
 
     }
     console.log(str);
+	*/
    
 }
 
