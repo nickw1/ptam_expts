@@ -4,15 +4,37 @@
      C++ is in ocvcpp directory. -->
 <html>
 <head>
+<style type='text/css'>
+@media only screen and (orientation:portrait) {
+    #controls > input {
+        width: 100%;
+        display: block;
+        font-size: 400%;
+        margin: 20px;
+    }
+
+    #status {
+        font-size: 250%;
+    }
+}
+
+@media only screen and (orientation: landscape) {
+    #status {
+        font-size: 120%;
+    }
+}
+</style>
 <title>ptam test</title>
 </head>
 
 <body>
 <h1>PTAM Test</h1>
-<div id='status' style='width: 640px; background-color: black; color: white; font-size: 120%; margin-bottom: 10px'></div>
-<video id='video1' width='640' height='480'></video>
-<canvas id='canvas1' width='640' height='480' style='display: none'></canvas>
-<div>
+<div id='status' style='width: 800px; background-color: black; color: white;  margin-bottom: 10px'></div>
+<div id='videoContainer' style='width:800px; height: 600px'>
+<video id='video1' width='800' height='600'></video>
+<canvas id='canvas1' width='800' height='600' style='display: none'></canvas>
+</div>
+<div id='controls'>
 <input type="button" id='start' value="Start Tracking" />
 <input type="button" id='captureKeyFrame' value="Capture Key Frame 1" disabled />
 <input type="button" id='stop' value="Stop Tracking" disabled />

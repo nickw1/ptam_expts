@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
     mpMap = new ptam::Map;
     mpMapMaker = new ptam::MapMaker (*mpMap, *mpCamera);
     
-    mpTracker = new ptam::Tracker(CVD::ImageRef(640,480), *mpCamera, *mpMap, *mpMapMaker);
+    mpTracker = new ptam::Tracker(CVD::ImageRef(800, 600), *mpCamera, *mpMap, *mpMapMaker);
 
     
     poseMatrix[15] = 1;
@@ -174,7 +174,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE int receiveData(uint8_t *ptr, int width, int hei
         }
         cout << endl;
     }
-    return resetStatus == ptam::Tracker::RESET ? 0: (resetStatus == ptam::Tracker::BOTH_FRAMES_CAPTURED ? 2: 1);
+    return (resetStatus == ptam::Tracker::RESET) ? 0: (resetStatus == ptam::Tracker::BOTH_FRAMES_CAPTURED ? 2: 1);
 }
 
 // simulate the 'space press'...
