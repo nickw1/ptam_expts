@@ -62,6 +62,7 @@ ptam::Map *mpMap;
 ptam::MapMaker *mpMapMaker;
 ptam::ATANCamera *mpCamera;
 
+bool isProcessingFrame = false;
 
 vector<double> getMapPoints() {
     return mapPoints;
@@ -101,80 +102,87 @@ int main(int argc, char *argv[]) {
 extern "C" EMSCRIPTEN_KEEPALIVE int receiveData(uint8_t *ptr, int width, int height) {
 
 //    cout << "receiveData()" << endl;
-    auto cv_image = cv::Mat(width, height, CV_8UC4, ptr);
+    if(!isProcessingFrame) {
+        isProcessingFrame = true;
+        auto cv_image = cv::Mat(width, height, CV_8UC4, ptr);
     
-    cv::Mat gray_image;
-    CVD::Image<CVD::byte> frameBW;
-    CVD::Image<CVD::Rgb<CVD::byte> > frameRGB;
+        cv::Mat gray_image;
+        CVD::Image<CVD::byte> frameBW;
+        CVD::Image<CVD::Rgb<CVD::byte> > frameRGB;
     
-    // From PTAM code (slam_system.cc)
-    // TODO - Not sure if this is needed here
-    //cv::cvtColor(cv_image, cv_image, cv::COLOR_BGR2RGB);
+        // From PTAM code (slam_system.cc)
+        // TODO - Not sure if this is needed here
+        //cv::cvtColor(cv_image, cv_image, cv::COLOR_BGR2RGB);
 
-    cv::cvtColor(cv_image, gray_image, cv::COLOR_RGB2GRAY);
+        cv::cvtColor(cv_image, gray_image, cv::COLOR_RGB2GRAY);
     
 
-    CVD::SubImage<CVD::Rgb<CVD::byte> > cvd_rgb_frame(
-        (CVD::Rgb<CVD::byte>*)cv_image.data,
-        CVD::ImageRef(cv_image.cols, cv_image.rows), cv_image.cols);
-    CVD::SubImage<CVD::byte> cvd_gray_frame(gray_image.data,
+        CVD::SubImage<CVD::Rgb<CVD::byte> > cvd_rgb_frame(
+            (CVD::Rgb<CVD::byte>*)cv_image.data,
+            CVD::ImageRef(cv_image.cols, cv_image.rows), cv_image.cols);
+        CVD::SubImage<CVD::byte> cvd_gray_frame(gray_image.data,
             CVD::ImageRef(gray_image.cols, gray_image.rows), cv_image.cols);
 
-    frameBW.copy_from(cvd_gray_frame);
-    frameRGB.copy_from(cvd_rgb_frame);
+        frameBW.copy_from(cvd_gray_frame);
+        frameRGB.copy_from(cvd_rgb_frame);
 
 
-    // This will try to get the tracking going, first stage is to get two keyframes, first keyframe is obtained when we 'press space' (simulated by call above), second is when we 'press space' again
+        // This will try to get the tracking going, first stage is to get two keyframes, first keyframe is obtained when we 'press space' (simulated by call above), second is when we 'press space' again
 
-    ptam::Tracker::ResetStatus resetStatus = mpTracker->TrackFrame(frameBW, true);
-    //    https://www.edwardrosten.com/cvd/toon/html-user/classTooN_1_1SE3.html
-    // We can't get the raw matrix straight out of the SE3 so we have to
-    // decompose it into translation and rotation components and then 
-    // reconstruct the matrix.
-
-
+        ptam::Tracker::ResetStatus resetStatus = mpTracker->TrackFrame(frameBW, true);
+        //    https://www.edwardrosten.com/cvd/toon/html-user/classTooN_1_1SE3.html
+        // We can't get the raw matrix straight out of the SE3 so we have to
+        // decompose it into translation and rotation components and then 
+        // reconstruct the matrix.
 
 
-    TooN::SE3<double> pose = mpTracker->GetCurrentPose();
-    const TooN::Matrix<3,3,double> rotation = pose.get_rotation().get_matrix();
-    for(int row=0; row<3; row++) {
-        for(int col=0; col<3; col++) {
-            poseMatrix[row*4+col] = rotation(row, col);
-        }    
-    }
 
-    TooN::Vector<3, double> translation = pose.get_translation();
-    for(int i=0; i<3; i++) {
-        poseMatrix[i*4+3] = translation[i];
-    }
-    /*
-    cout << "Matrix: ";
-    for(int i=0; i<16; i++) {
-        if(!(i%4)) {
-            cout << endl;
+
+        TooN::SE3<double> pose = mpTracker->GetCurrentPose();
+        const TooN::Matrix<3,3,double> rotation = pose.get_rotation().get_matrix();
+        for(int row=0; row<3; row++) {
+            for(int col=0; col<3; col++) {
+                poseMatrix[row*4+col] = rotation(row, col);
+            }    
         }
-        cout << poseMatrix[i] << " ";
-    }
-    cout << endl;
-    */
 
-
-
-    // the Map has a vector of pointers to MapPoint.
-    // MapPoint contains a TooN::Vector v3WorldPos.
-    mapPoints.clear();
-    vector<ptam::MapPoint*> points = mpMap->points;
-    mapPoints.reserve(points.size() * sizeof(double) * 3);
-    
-    for(int i=0; i<points.size(); i++) {
-        cout << " worldpos for point " << i << " : ";
-        for(int j=0; j<3; j++) {
-            mapPoints.push_back(points[i]->v3WorldPos[j]);
-            cout << points[i]->v3WorldPos[j]  << " ";
+        TooN::Vector<3, double> translation = pose.get_translation();
+        for(int i=0; i<3; i++) {
+            poseMatrix[i*4+3] = translation[i];
+        }
+        /*
+        cout << "Matrix: ";
+        for(int i=0; i<16; i++) {
+           if(!(i%4)) {
+               cout << endl;
+           }
+           cout << poseMatrix[i] << " ";
         }
         cout << endl;
+        */
+
+
+
+        // the Map has a vector of pointers to MapPoint.
+        // MapPoint contains a TooN::Vector v3WorldPos.
+        mapPoints.clear();
+        vector<ptam::MapPoint*> points = mpMap->points;
+        mapPoints.reserve(points.size() * sizeof(double) * 3);
+    
+        for(int i=0; i<points.size(); i++) {
+            cout << " worldpos for point " << i << " : ";
+            for(int j=0; j<3; j++) {
+                mapPoints.push_back(points[i]->v3WorldPos[j]);
+                cout << points[i]->v3WorldPos[j]  << " ";
+            }
+            cout << endl;
+        }
+        isProcessingFrame = false;
+        return (resetStatus == ptam::Tracker::RESET) ? 0: (resetStatus == ptam::Tracker::BOTH_FRAMES_CAPTURED ? 2: 1);
+    } else {
+        cout << "$$$$ Frame ignored as still processing previous frame!!!" << endl;
+        return 1;
     }
-    return (resetStatus == ptam::Tracker::RESET) ? 0: (resetStatus == ptam::Tracker::BOTH_FRAMES_CAPTURED ? 2: 1);
 }
 
 // simulate the 'space press'...
