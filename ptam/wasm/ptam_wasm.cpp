@@ -109,7 +109,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE int receiveData(uint8_t *ptr, int width, int hei
     
     // From PTAM code (slam_system.cc)
     // TODO - Not sure if this is needed here
-//    cv::cvtColor(cv_image, cv_image, cv::COLOR_BGR2RGB);
+    //cv::cvtColor(cv_image, cv_image, cv::COLOR_BGR2RGB);
 
     cv::cvtColor(cv_image, gray_image, cv::COLOR_RGB2GRAY);
     

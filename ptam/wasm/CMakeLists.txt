@@ -23,21 +23,22 @@ include_directories( ${opencv_include_modules} ${ptamdir} "${ptamdir}/external" 
 
 add_compile_options("-fexceptions")
 add_compile_options("-pthread")
-#add_compile_options("-s PTHREAD_POOL_SIZE_STRICT=2")
-#add_link_options("-s PTHREAD_POOL_SIZE_STRICT=2")
+add_compile_options("-gsource-map")
+#add_link_options("SHELL: -s SAFE_HEAP=1")
+add_link_options("SHELL: -s DEMANGLE_SUPPORT=1")
 add_link_options("SHELL: -s LLD_REPORT_UNDEFINED")
 add_link_options("-fexceptions")
-#add_link_options("-s INITIAL_MEMORY=32000000")
 add_link_options("SHELL: -s PTHREAD_POOL_SIZE=4")
 add_link_options("SHELL: -s ALLOW_MEMORY_GROWTH=1")
 add_link_options("SHELL: -s INITIAL_MEMORY=64mb")
+add_link_options("--emit-symbol-map")
 add_link_options("-pthread")
 # the below is useful to debug pointer errors but doesn't seem to link properly
 # https://emscripten.org/docs/debugging/Sanitizers.html 
-#add_link_options("-fsanitize=address")
+add_link_options("-fsanitize=address")
+add_compile_options("-fsanitize=address")
 add_link_options("--bind")
 #add_compile_options("-O3")
-#add_link_options("-s LLD_REPORT_UNDEFINED")
 
 # Our hello world executable
 add_executable( ptam_wasm ptam_wasm.cpp )
