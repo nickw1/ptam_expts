@@ -1,19 +1,71 @@
-const canvas1 = document.getElementById('canvas1');
-const ctx = canvas1.getContext('2d');
-const video1 = document.getElementById('video1');
-const width = 800, height = 600;
-const FPS = 30;
-let wasmPassTime, wasmPassLast = 0;
-let active = false, nKeyFrames = 0; 
-let ptr;
-let pollHandle = null;
-let poseMatrix = null; 
+import * as THREE from './node_modules/three/build/three.module.js';
 
-navigator.mediaDevices.getUserMedia({video: {facingMode: 'environment'}}).then (stream => {
-    video1.srcObject = stream;
-    video1.play();
-    setTimeout(processVideo, 500);    
-    status("Ready.");
+let scene, camera, renderer, canvas1, camera2, scene2, video, wasmPassTime, wasmPassLast = 0, active = false, nKeyFrames = 0, ptr, pollHandle = null, poseMatrix= null, invisibleCanvas, ctx, imgData2;
+
+const camWidth = 480, camHeight = 640, FPS = 30;
+
+init();
+animate();
+
+function init() {
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(80, camWidth/camHeight, 0.1, 100);
+    canvas1 = document.getElementById("canvas1");
+    renderer = new THREE.WebGLRenderer({canvas: canvas1});
+    renderer.autoClear = false;
+
+    scene2 = new THREE.Scene();
+    camera2 = new THREE.OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0, 0.1);
+
+
+    window.addEventListener("resize", onResize);
+
+    video = document.createElement("video");
+    video.setAttribute("autoplay", true);
+    video.setAttribute("playsinline", true);
+
+    invisibleCanvas = document.createElement("canvas");
+    invisibleCanvas.width = camWidth;
+    invisibleCanvas.height = camHeight;
+    ctx = invisibleCanvas.getContext('2d');
+
+    navigator.mediaDevices.getUserMedia({
+        video:{
+            facingMode: 'environment', 
+            width: camWidth, 
+            height: camHeight
+        }
+    }).then(feed => {
+        video.srcObject = feed;
+        setTimeout(processVideo, 500);
+    });
+
+    const geom = new THREE.PlaneBufferGeometry();
+    const mtl = new THREE.MeshBasicMaterial({map: new THREE.VideoTexture(video)}); 
+    const mesh = new THREE.Mesh(geom, mtl);
+    scene2.add(mesh);
+
+    //imgData2 = new Uint8Array(camWidth * camHeight * 4);
+
+    setupUI();
+    onResize();
+}
+
+function animate() {
+    renderer.render(scene2, camera2);
+    const now = Date.now();
+    renderer.clearDepth();
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+}
+
+function onResize() {
+    renderer.setSize(canvas1.clientWidth, canvas1.clientHeight);
+    camera.aspect = canvas1.clientWidth / canvas1.clientHeight;
+    camera.updateProjectionMatrix();
+}
+
+function setupUI() {
     document.getElementById("start").addEventListener("click", e=> {
         document.getElementById("start").setAttribute("disabled", true);
         if(nKeyFrames === 0) {
@@ -53,25 +105,28 @@ navigator.mediaDevices.getUserMedia({video: {facingMode: 'environment'}}).then (
         document.getElementById("cleanup").setAttribute("disabled", true);
         console.log('memory freed');
     });
-});
+}
 
 function processVideo() {
-    const begin = Date.now();
-    ctx.drawImage(video1, 0, 0, width, height);
+    ctx.drawImage(video, 0, 0, camWidth, camHeight);
     wasmPassTime = Date.now();
     if(active && wasmPassTime - wasmPassLast > 1000) {
-        sendCanvas(document.getElementById('canvas1'));
+        sendCanvas(invisibleCanvas);
         wasmPassLast = wasmPassTime;
     }
-    const delay = 1000/FPS - (Date.now() - begin);
+//    const delay = 1000/FPS - (Date.now() - wasmPassTime);
+    const delay = 500;
     setTimeout(processVideo, delay);
 }
 
 function sendCanvas(canvas) {
     const ctx = canvas.getContext('2d');
-    const imgData = ctx.getImageData(0, 0, width, height);
+    const imgData = ctx.getImageData(0, 0, camWidth, camHeight);
+    // attempt to read webgl canvas directly - gives blank data
+    //const ctx2 = canvas1.getContext('webgl2');
+    //ctx2.readPixels(0, 0, camWidth, camHeight, ctx2.RGBA, ctx2.UNSIGNED_BYTE, imgData2, 0);
     const uint8ArrData = new Uint8Array(imgData.data);
-    passToWasm(uint8ArrData, width, height);
+    passToWasm(uint8ArrData, camWidth, camHeight);
 }
 
 function passToWasm(data, width, height) {
@@ -116,8 +171,6 @@ function pollPTAM() {
 
     }
     console.log(str);
-    
-   
 }
 
 function status(msg) {

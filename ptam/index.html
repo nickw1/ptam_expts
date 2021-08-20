@@ -25,14 +25,18 @@
 }
 </style>
 <title>ptam test</title>
+<script type='module' src='index.js'></script>
 </head>
 
 <body>
 <h1>PTAM Test</h1>
-<div id='status' style='width: 800px; background-color: black; color: white;  margin-bottom: 10px'></div>
-<div id='videoContainer' style='width:800px; height: 600px'>
+<div id='status' style='width: 480px; background-color: black; color: white;  margin-bottom: 10px'></div>
+<div id='videoContainer' style='width:480px; height: 640px'>
+<!--
 <video id='video1' width='800' height='600'></video>
 <canvas id='canvas1' width='800' height='600' style='display: none'></canvas>
+-->
+<canvas id='canvas1' width='480' height='640'></canvas>
 </div>
 <div id='controls'>
 <input type="button" id='start' value="Start Tracking" />
@@ -41,6 +45,5 @@
 <input type="button" id='cleanup' value="Cleanup" />
 </div>
 <script type='text/javascript' src='wasm/ptam_wasm.js'></script>
-<script type='text/javascript' src='index.js'></script>
 </body>
 </html>

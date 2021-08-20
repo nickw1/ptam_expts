@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
     mpMap = new ptam::Map;
     mpMapMaker = new ptam::MapMaker (*mpMap, *mpCamera);
     
-    mpTracker = new ptam::Tracker(CVD::ImageRef(800, 600), *mpCamera, *mpMap, *mpMapMaker);
+    mpTracker = new ptam::Tracker(CVD::ImageRef(480, 640), *mpCamera, *mpMap, *mpMapMaker);
 
     
     poseMatrix[15] = 1;
@@ -101,7 +101,10 @@ int main(int argc, char *argv[]) {
 
 extern "C" EMSCRIPTEN_KEEPALIVE int receiveData(uint8_t *ptr, int width, int height) {
 
-//    cout << "receiveData()" << endl;
+    cout << "receiveData()" << endl;
+    //cout << "Width " << width << " Height " << height << " Pointer: " << ((long)ptr) << endl; 
+   //auto cv_image = cv::Mat(width, height, CV_8UC4, ptr);
+   //cout << "Width " << width << " Height " << height << " Pointer: " << ((long)ptr) << " Mat " << cv_image << endl;
     if(!isProcessingFrame) {
         isProcessingFrame = true;
         auto cv_image = cv::Mat(width, height, CV_8UC4, ptr);
@@ -150,16 +153,14 @@ extern "C" EMSCRIPTEN_KEEPALIVE int receiveData(uint8_t *ptr, int width, int hei
         for(int i=0; i<3; i++) {
             poseMatrix[i*4+3] = translation[i];
         }
-        /*
-        cout << "Matrix: ";
-        for(int i=0; i<16; i++) {
-           if(!(i%4)) {
-               cout << endl;
-           }
-           cout << poseMatrix[i] << " ";
-        }
+        //cout << "Matrix: ";
+        //for(int i=0; i<16; i++) {
+         //  if(!(i%4)) {
+          //     cout << endl;
+         //  }
+       //    cout << poseMatrix[i] << " ";
+        //}
         cout << endl;
-        */
 
 
 
@@ -183,6 +184,7 @@ extern "C" EMSCRIPTEN_KEEPALIVE int receiveData(uint8_t *ptr, int width, int hei
         cout << "$$$$ Frame ignored as still processing previous frame!!!" << endl;
         return 1;
     }
+    //return 1;
 }
 
 // simulate the 'space press'...
