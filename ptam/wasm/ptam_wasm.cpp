@@ -65,6 +65,7 @@ ptam::ATANCamera *mpCamera;
 bool isProcessingFrame = false;
 
 vector<double> getMapPoints() {
+    cout << "Returning map points : " << mapPoints.size() << endl;
     return mapPoints;
 }
 
@@ -169,14 +170,14 @@ extern "C" EMSCRIPTEN_KEEPALIVE int receiveData(uint8_t *ptr, int width, int hei
         mapPoints.clear();
         vector<ptam::MapPoint*> points = mpMap->points;
         mapPoints.reserve(points.size() * sizeof(double) * 3);
-    
+   
         for(int i=0; i<points.size(); i++) {
-            cout << " worldpos for point " << i << " : ";
+        //    cout << " worldpos for point " << i << " : ";
             for(int j=0; j<3; j++) {
                 mapPoints.push_back(points[i]->v3WorldPos[j]);
-                cout << points[i]->v3WorldPos[j]  << " ";
+         //       cout << points[i]->v3WorldPos[j]  << " ";
             }
-            cout << endl;
+          //  cout << endl;
         }
         isProcessingFrame = false;
         return (resetStatus == ptam::Tracker::RESET) ? 0: (resetStatus == ptam::Tracker::BOTH_FRAMES_CAPTURED ? 2: 1);

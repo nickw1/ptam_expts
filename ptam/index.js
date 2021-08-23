@@ -1,6 +1,6 @@
 import * as THREE from './node_modules/three/build/three.module.js';
 
-let scene, camera, renderer, canvas1, camera2, scene2, video, wasmPassTime, wasmPassLast = 0, active = false, nKeyFrames = 0, ptr, pollHandle = null, poseMatrix= null, invisibleCanvas, ctx, imgData2;
+let scene, camera, renderer, canvas1, camera2, scene2, video, wasmPassTime, wasmPassLast = 0, active = false, nKeyFrames = 0, ptr, pollHandle = null, poseMatrix= null, invisibleCanvas, ctx, imgData2, mapPointGeom, mapPointMtl, objects = [];
 
 const camWidth = 480, camHeight = 640, FPS = 30;
 
@@ -9,7 +9,7 @@ animate();
 
 function init() {
     scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(80, camWidth/camHeight, 0.1, 100);
+    camera = new THREE.PerspectiveCamera(80, camWidth/camHeight, 0.00001, 1);
     canvas1 = document.getElementById("canvas1");
     renderer = new THREE.WebGLRenderer({canvas: canvas1});
     renderer.autoClear = false;
@@ -46,6 +46,19 @@ function init() {
     scene2.add(mesh);
 
     //imgData2 = new Uint8Array(camWidth * camHeight * 4);
+
+    mapPointGeom = new THREE.BoxGeometry(0.0001, 0.0001, 0.0001);
+    mapPointMtl = new THREE.MeshBasicMaterial({color:0xff0000});
+
+    /*
+    for(let  i=-20; i<20; i++) {
+        const mesh1 = new THREE.Mesh(mapPointGeom, mapPointMtl);
+        mesh1.position.x = 0.001 * i;
+        mesh1.position.z = (-0.001 * i) - 0.001;
+        mesh1.position.y = 0;
+        scene.add(mesh1);
+    }
+    */
 
     setupUI();
     onResize();
@@ -156,8 +169,14 @@ function pollPTAM() {
         poseMatrix = new Module.PoseMatrix();
     }
     const mapPoints = Module.getMapPoints();
-    console.log(`JS: mapPoints length ${mapPoints.length}`)
-//    console.log(mapPoints);
+    try {
+        console.log(`JS: mapPoints size ${mapPoints.size()}`)
+        for(let i=0; i<mapPoints.size(); i+=3) {
+            console.log(`${i} ${mapPoints.get(i)} ${mapPoints.get(i+1)} ${mapPoints.get(i+2)}`);
+        }
+    } catch(e) {
+        console.error(e);
+    }
     poseMatrix.loadLatestMatrix();
     
     
@@ -170,7 +189,28 @@ function pollPTAM() {
         str += `${poseMatrix.get(i)} `;
 
     }
+    //addVisibleMapPoints(poseMatrix, mapPoints);
     console.log(str);
+}
+
+function addVisibleMapPoints(poseMatrix, mapPoints) {
+    for(let object of objects) {
+        scene.remove(object);
+    }
+    objects = [];
+    const m = new Array(16);
+    for(let i=0; i<16; i++) {
+        m[i] = poseMatrix.get(i);
+    }
+    camera.matrixWorldInverse = m;
+    for(let i=0; i<mapPoints.size(); i+=3)  {
+        const mesh = new THREE.Mesh(mapPointGeom, mapPointMtl);
+        mesh.translation.x = mapPoints.get(i);
+        mesh.translation.y = mapPoints.get(i+1);
+        mesh.translation.z = mapPoints.get(i+2);
+        scene.add(mesh);
+        objects.push(mesh);
+    }
 }
 
 function status(msg) {
