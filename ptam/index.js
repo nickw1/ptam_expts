@@ -1,68 +1,64 @@
 import * as THREE from './node_modules/three/build/three.module.js';
 
-let scene, camera, renderer, canvas1, camera2, scene2, video, wasmPassTime, wasmPassLast = 0, active = false, nKeyFrames = 0, ptr, pollHandle = null, poseMatrix= null, invisibleCanvas, ctx, imgData2, mapPointGeom, mapPointMtl, objects = [];
+let wasmPassTime, wasmPassLast = 0, active = false, nKeyFrames = 0, ptr, pollHandle = null, poseMatrix= null, imgData2, objects = [], lastMapPointUpdateTime = 0;
 
 const camWidth = 480, camHeight = 640, FPS = 30;
 
-init();
-animate();
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(80, camWidth/camHeight, 0.0001, 100);
+const canvas1 = document.getElementById("canvas1");
+const renderer = new THREE.WebGLRenderer({canvas: canvas1});
+renderer.autoClear = false;
 
-function init() {
-    scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(80, camWidth/camHeight, 0.00001, 1);
-    canvas1 = document.getElementById("canvas1");
-    renderer = new THREE.WebGLRenderer({canvas: canvas1});
-    renderer.autoClear = false;
-
-    scene2 = new THREE.Scene();
-    camera2 = new THREE.OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0, 0.1);
+const scene2 = new THREE.Scene();
+const camera2 = new THREE.OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0, 0.1);
 
 
-    window.addEventListener("resize", onResize);
+window.addEventListener("resize", onResize);
 
-    video = document.createElement("video");
-    video.setAttribute("autoplay", true);
-    video.setAttribute("playsinline", true);
+const video = document.createElement("video");
+video.setAttribute("autoplay", true);
+video.setAttribute("playsinline", true);
 
-    invisibleCanvas = document.createElement("canvas");
-    invisibleCanvas.width = camWidth;
-    invisibleCanvas.height = camHeight;
-    ctx = invisibleCanvas.getContext('2d');
+const invisibleCanvas = document.createElement("canvas");
+invisibleCanvas.width = camWidth;
+invisibleCanvas.height = camHeight;
+const ctx = invisibleCanvas.getContext('2d');
 
-    navigator.mediaDevices.getUserMedia({
-        video:{
-            facingMode: 'environment', 
-            width: camWidth, 
-            height: camHeight
-        }
-    }).then(feed => {
-        video.srcObject = feed;
-        setTimeout(processVideo, 500);
-    });
-
-    const geom = new THREE.PlaneBufferGeometry();
-    const mtl = new THREE.MeshBasicMaterial({map: new THREE.VideoTexture(video)}); 
-    const mesh = new THREE.Mesh(geom, mtl);
-    scene2.add(mesh);
-
-    //imgData2 = new Uint8Array(camWidth * camHeight * 4);
-
-    mapPointGeom = new THREE.BoxGeometry(0.0001, 0.0001, 0.0001);
-    mapPointMtl = new THREE.MeshBasicMaterial({color:0xff0000});
-
-    /*
-    for(let  i=-20; i<20; i++) {
-        const mesh1 = new THREE.Mesh(mapPointGeom, mapPointMtl);
-        mesh1.position.x = 0.001 * i;
-        mesh1.position.z = (-0.001 * i) - 0.001;
-        mesh1.position.y = 0;
-        scene.add(mesh1);
+navigator.mediaDevices.getUserMedia({
+    video:{
+        facingMode: 'environment', 
+        width: camWidth, 
+        height: camHeight
     }
-    */
+}).then(feed => {
+    video.srcObject = feed;
+    setTimeout(processVideo, 500);
+});
 
-    setupUI();
-    onResize();
+const geom = new THREE.PlaneBufferGeometry();
+const mtl = new THREE.MeshBasicMaterial({map: new THREE.VideoTexture(video)}); 
+const mesh = new THREE.Mesh(geom, mtl);
+scene2.add(mesh);
+
+//imgData2 = new Uint8Array(camWidth * camHeight * 4);
+
+const mapPointGeom = new THREE.BoxGeometry(0.0005, 0.0005, 0.0005);
+const mapPointMtl = new THREE.MeshBasicMaterial({color:0xff0000});
+
+/*
+for(let  i=-20; i<20; i++) {
+    const mesh1 = new THREE.Mesh(mapPointGeom, mapPointMtl);
+    mesh1.position.x = 0.001 * i;
+    mesh1.position.z = (-0.001 * i) - 0.001;
+    mesh1.position.y = 0;
+    scene.add(mesh1);
 }
+*/
+
+setupUI();
+onResize();
+animate();
 
 function animate() {
     renderer.render(scene2, camera2);
@@ -189,7 +185,11 @@ function pollPTAM() {
         str += `${poseMatrix.get(i)} `;
 
     }
-    //addVisibleMapPoints(poseMatrix, mapPoints);
+    const now = Date.now();
+    if(lastMapPointUpdateTime - now > 5000) {
+        addVisibleMapPoints(poseMatrix, mapPoints);
+        lastMapPointUpdateTime = now;
+    }
     console.log(str);
 }
 
