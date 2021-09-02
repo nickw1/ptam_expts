@@ -10,6 +10,8 @@ const canvas1 = document.getElementById("canvas1");
 const renderer = new THREE.WebGLRenderer({canvas: canvas1});
 renderer.autoClear = false;
 
+camera.matrixAutoUpdate = false;
+
 const scene2 = new THREE.Scene();
 const camera2 = new THREE.OrthographicCamera(-0.5, 0.5, 0.5, -0.5, 0, 0.1);
 
@@ -43,7 +45,7 @@ scene2.add(mesh);
 
 //imgData2 = new Uint8Array(camWidth * camHeight * 4);
 
-const mapPointGeom = new THREE.BoxGeometry(0.0005, 0.0005, 0.0005);
+const mapPointGeom = new THREE.BoxGeometry(0.001, 0.001, 0.001);
 const mapPointMtl = new THREE.MeshBasicMaterial({color:0xff0000});
 
 /*
@@ -186,28 +188,30 @@ function pollPTAM() {
 
     }
     const now = Date.now();
-    if(lastMapPointUpdateTime - now > 5000) {
-        addVisibleMapPoints(poseMatrix, mapPoints);
-        lastMapPointUpdateTime = now;
-    }
+	addVisibleMapPoints(poseMatrix, mapPoints);
     console.log(str);
 }
 
 function addVisibleMapPoints(poseMatrix, mapPoints) {
+	console.log(`Removing ${objects.length} objects.`);
     for(let object of objects) {
-        scene.remove(object);
+		object.removeFromParent();
     }
     objects = [];
     const m = new Array(16);
+	
     for(let i=0; i<16; i++) {
-        m[i] = poseMatrix.get(i);
+        camera.matrixWorldInverse.elements[i] = poseMatrix.get(i);
     }
-    camera.matrixWorldInverse = m;
+    scene.updateMatrixWorld();
+	
+//    camera.matrixWorldInverse = m;
     for(let i=0; i<mapPoints.size(); i+=3)  {
+		console.log('Creating a mesh...');
         const mesh = new THREE.Mesh(mapPointGeom, mapPointMtl);
-        mesh.translation.x = mapPoints.get(i);
-        mesh.translation.y = mapPoints.get(i+1);
-        mesh.translation.z = mapPoints.get(i+2);
+        mesh.position.x = mapPoints.get(i);
+        mesh.position.y = mapPoints.get(i+1);
+        mesh.position.z = mapPoints.get(i+2);
         scene.add(mesh);
         objects.push(mesh);
     }
